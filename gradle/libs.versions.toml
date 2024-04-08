@@ -1,0 +1,24 @@
+[versions]
+plugin_mixin_gradle = "0.7.+"
+plugin_forge_gradle = "6.0.+"
+
+
+minecraft = "1.18.2"
+mixin = "0.8.5"
+minecraftforge = "1.18.2-40.2.0"
+minecraftRange = "[1.18.2,1.19)"
+forge = "40.2.0"
+forgeRange = "[40,)"
+mekanism = "1.18.2-10.2.0.459"
+
+
+[libraries]
+minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
+mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
+minecraftforge = { module = "net.minecraftforge:forge", version.ref = "minecraftforge" }
+mekanism = { module = "mekanism:Mekanism", version.ref = "mekanism" }
+
+
+[plugins]
+mixin_gradle = { id = "org.spongepowered.mixin", version.ref = "plugin_mixin_gradle" }
+forge_gradle = { id = "net.minecraftforge.gradle", version.ref = "plugin_forge_gradle" }
