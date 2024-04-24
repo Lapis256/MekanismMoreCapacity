@@ -6,6 +6,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.*;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+
 @Mixin(value = FusionReactorMultiblockData.class, remap = false)
 public abstract class MixinFusionReactorMultiblockData {
     @Redirect(method = "<init>", at = @At(value = "FIELD", target = "Lmekanism/generators/common/content/fusion/FusionReactorMultiblockData;MAX_ENERGY:Lmekanism/api/math/FloatingLong;"))
