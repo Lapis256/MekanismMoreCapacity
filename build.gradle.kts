@@ -96,6 +96,7 @@ dependencies {
     minecraft(libs.minecraftforge)
 
     libs.mekanism.get().run {
+        compileOnly(fg.deobf("$module:$version"))
         compileOnly(fg.deobf("$module:$version:api"))
         compileOnly(fg.deobf("$module:$version:generators"))
 
