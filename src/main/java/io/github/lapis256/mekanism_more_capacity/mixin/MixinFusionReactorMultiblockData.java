@@ -14,18 +14,8 @@ public abstract class MixinFusionReactorMultiblockData {
         return FloatingLong.MAX_VALUE;
     }
 
-    @Inject(method = "lambda$new$0", at = @At("RETURN"), cancellable = true)
-    private static void injectGasCapacity_0(CallbackInfoReturnable<Long> cir) {
-        cir.setReturnValue(1_000_000L);
-    }
-
-    @Inject(method = "lambda$new$1", at = @At("RETURN"), cancellable = true)
-    private static void injectGasCapacity_1(CallbackInfoReturnable<Long> cir) {
-        cir.setReturnValue(1_000_000L);
-    }
-
-    @Inject(method = "lambda$new$2", at = @At("RETURN"), cancellable = true)
-    private static void injectGasCapacity_2(CallbackInfoReturnable<Long> cir) {
+    @Inject(method = {"lambda$new$0", "lambda$new$1", "lambda$new$2"}, at = @At("RETURN"), cancellable = true)
+    private static void injectGasCapacity(CallbackInfoReturnable<Long> cir) {
         cir.setReturnValue(1_000_000L);
     }
 }

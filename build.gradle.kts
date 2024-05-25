@@ -6,18 +6,21 @@ plugins {
     id("java-library")
     id("idea")
 
-    alias(libs.plugins.forge.gradle)
-    alias(libs.plugins.mixin.gradle)
+    alias(libs.plugins.forge)
+    alias(libs.plugins.mixin)
+    alias(libs.plugins.parchmentmc)
 }
 
 val modId = Constants.Mod.id
 val minecraftVersion: String = libs.versions.minecraft.get()
+val forgeMajorVersion: String = libs.versions.forge.get().split(".").first()
+val jdkVersion = 17
 
-version = Constants.Mod.version
-group = Constants.Mod.group
 
 base {
-    archivesName = "${Constants.Mod.name}-$minecraftVersion"
+    archivesName = "${project.name}-$minecraftVersion"
+    version = Constants.Mod.version
+    group = Constants.Mod.group
 }
 
 mixin {
@@ -27,38 +30,54 @@ mixin {
 }
 
 minecraft {
-    mappings("official", minecraftVersion)
+    mappings("parchment", "${libs.versions.parchmentmc.get()}-$minecraftVersion")
 
     copyIdeResources = true
 
     file("src/main/resources/META-INF/accesstransformer.cfg").takeIf(File::exists)?.let(::accessTransformer)
 
     runs {
-        create("client") {
-            workingDirectory(project.file("run"))
+        configureEach {
             ideaModule("${rootProject.name}.${project.name}.main")
-            taskName("Forge Client")
+
+            properties(
+                mapOf(
+                    "forge.logging.markers" to "REGISTRIES", "forge.logging.console.level" to "debug"
+                )
+            )
+
+            jvmArgs(
+                "-XX:+AllowEnhancedClassRedefinition"
+            )
+
             mods {
                 create(modId) {
                     source(sourceSets.main.get())
                 }
             }
+        }
+
+        create("client") {
+            taskName("Forge Client")
+
+            workingDirectory(project.file("run"))
+
+            property("forge.enabledGameTestNamespaces", modId)
         }
 
         create("server") {
-            workingDirectory(project.file("run"))
-            ideaModule("${rootProject.name}.${project.name}.main")
             taskName("Forge Server")
-            mods {
-                create(modId) {
-                    source(sourceSets.main.get())
-                }
-            }
+
+            workingDirectory(project.file("run-server"))
+
+            property("forge.enabledGameTestNamespaces", modId)
         }
 
         create("data") {
-            workingDirectory(project.file("run"))
-            ideaModule("${rootProject.name}.${project.name}.main")
+            taskName("Generate Data")
+
+            workingDirectory(project.file("run-data"))
+
             args(
                 "--mod",
                 modId,
@@ -68,12 +87,6 @@ minecraft {
                 "--existing",
                 file("src/main/resources/")
             )
-            taskName("Data")
-            mods {
-                create(modId) {
-                    source(sourceSets.main.get())
-                }
-            }
         }
     }
 }
@@ -93,19 +106,15 @@ repositories {
 }
 
 dependencies {
-    minecraft(libs.minecraftforge)
+    minecraft(libs.minecraftForge)
 
-    libs.mekanism.get().run {
-        compileOnly(fg.deobf("$module:$version"))
-        compileOnly(fg.deobf("$module:$version:api"))
-        compileOnly(fg.deobf("$module:$version:generators"))
+    compileOnly(deobf(libs.mekanism))
+    compileOnly(deobf(variantOf(libs.mekanism, "api")))
+    compileOnly(deobf(variantOf(libs.mekanism, "generators")))
 
-        runtimeOnly(fg.deobf("$module:$version:all"))
-    }
+    runtimeOnly(deobf(variantOf(libs.mekanism, "all")))
 
-    annotationProcessor(variantOf(libs.mixin) {
-        classifier("processor")
-    })
+    annotationProcessor(variantOf(libs.mixin, "processor"))
 }
 
 tasks {
@@ -116,9 +125,14 @@ tasks {
 
     java {
         withSourcesJar()
-        toolchain.languageVersion = JavaLanguageVersion.of(17)
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(jdkVersion)
+            vendor = JvmVendorSpec.JETBRAINS
+        }
+        JavaVersion.toVersion(jdkVersion).let {
+            sourceCompatibility = it
+            targetCompatibility = it
+        }
     }
 
     processResources {
@@ -126,17 +140,21 @@ tasks {
             "version" to version,
             "group" to project.group,
             "minecraft_version" to minecraftVersion,
-            "forge_version" to libs.versions.forge.get(),
-            "forge_loader_version_range" to libs.versions.forgeRange.get(),
-            "forge_version_range" to libs.versions.forgeRange.get(),
-            "minecraft_version_range" to libs.versions.minecraftRange.get(),
+            "mod_loader" to "javafml",
+            "mod_loader_version_range" to "[$forgeMajorVersion,)",
             "mod_name" to Constants.Mod.name,
             "mod_author" to Constants.Mod.author,
             "mod_id" to Constants.Mod.id,
             "license" to Constants.Mod.license,
             "description" to Constants.Mod.description,
             "display_url" to Constants.Mod.repositoryUrl,
-            "issue_tracker_url" to Constants.Mod.issueTrackerUrl
+            "issue_tracker_url" to Constants.Mod.issueTrackerUrl,
+
+            "dependencies" to buildDeps(
+                ModDep("forge", forgeMajorVersion),
+                ModDep("minecraft", minecraftVersion),
+                ModDep("mekanismgenerators", "10.2", ordering = Order.AFTER),
+            ),
         )
 
         filesMatching(listOf("pack.mcmeta", "META-INF/mods.toml", "*.mixins.json")) {
@@ -146,10 +164,6 @@ tasks {
     }
 
     jar {
-        from(rootProject.file("LICENSE")) {
-            rename { "LICENSE_${Constants.Mod.id}" }
-        }
-
         manifest {
             attributes(
                 "Specification-Title" to Constants.Mod.name,
@@ -168,9 +182,13 @@ tasks {
         finalizedBy("reobfJar")
     }
 
-    named<Jar>("sourcesJar") {
-        from(rootProject.file("LICENSE")) {
-            rename { "LICENSE_${Constants.Mod.id}" }
+    listOf("jar", "sourcesJar", "jarJar").forEach {
+        named<Jar>(it) {
+            from(rootProject.file("LICENSE")) {
+                rename { "LICENSE_${Constants.Mod.id}" }
+            }
         }
     }
 }
+
+fun deobf(dependency: Provider<MinimalExternalModuleDependency>) = fg.deobf(dependency.get())

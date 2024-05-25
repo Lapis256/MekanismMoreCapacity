@@ -1,5 +1,5 @@
-modLoader = "javafml"
-loaderVersion = "${forge_loader_version_range}"
+modLoader="${mod_loader}"
+loaderVersion = "${mod_loader_version_range}"
 license = "${license}"
 issueTrackerURL="${issue_tracker_url}"
 
@@ -10,21 +10,4 @@ displayName = "${mod_name}"
 displayURL="${display_url}"
 authors = "${mod_author}"
 description = '''${description}'''
-[[dependencies.${mod_id}]]
-modId = "forge"
-mandatory = true
-versionRange = "${forge_version_range}"
-ordering = "NONE"
-side = "BOTH"
-[[dependencies.${mod_id}]]
-modId = "minecraft"
-mandatory = true
-versionRange = "${minecraft_version_range}"
-ordering = "NONE"
-side = "BOTH"
-[[dependencies.${mod_id}]]
-modId = "mekanismgenerators"
-mandatory = true
-versionRange = "[10.2.0,10.3.0)"
-ordering = "AFTER"
-side = "BOTH"
+${dependencies}
