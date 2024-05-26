@@ -100,7 +100,7 @@ repositories {
         url = uri("https://repo.spongepowered.org/repository/maven-public/")
     }
     maven {
-        name = "Mekanism"
+        name = "Mekanism / JEI"
         url = uri("https://modmaven.dev/")
     }
 }
@@ -113,6 +113,8 @@ dependencies {
     compileOnly(deobf(variantOf(libs.mekanism, "generators")))
 
     runtimeOnly(deobf(variantOf(libs.mekanism, "all")))
+
+    runtimeOnly(deobf(libs.jei))
 
     annotationProcessor(variantOf(libs.mixin, "processor"))
 }

@@ -11,6 +11,7 @@ parchmentmc = "2022.11.06"
 mixin = "0.8.5"
 
 mekanism = "1.18.2-10.2.0.459"
+jei = "10.2.1.1005"
 
 
 [libraries]
@@ -19,6 +20,7 @@ minecraftForge = { module = "net.minecraftforge:forge", version.ref = "minecraft
 mixin = { module = "org.spongepowered:mixin", version.ref = "mixin" }
 
 mekanism = { module = "mekanism:Mekanism", version.ref = "mekanism" }
+jei = { module = "mezz.jei:jei-1.18.2-forge", version.ref = "jei" }
 
 
 [plugins]
